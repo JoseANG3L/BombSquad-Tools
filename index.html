@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herramientas para BombSquad</title>
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- FontAwesome 6 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--bg2:#131a26;--card:#181f2e;--line:#2a3448;--txt:#eef2f9;--mut:#9aa7bd;--acc:#5ee88a;--acc2:#6aa8ff;--warn:#ffcf6a;--danger:#ff8f8f}
+body{background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt);min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.nav-pills .nav-link{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:50px;font-weight:600;font-size:14px;margin:0 4px;transition:all 0.2s}
+.nav-pills .nav-link:hover{background:var(--line);color:var(--txt)}
+.nav-pills .nav-link.active{background:var(--txt);color:#0b101b;border-color:var(--txt)}
+.card-custom{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:16px}
+.card-custom .card-header{background:transparent;border-bottom:1px solid var(--line);padding:16px 20px}
+.card-custom .card-body{padding:20px}
+.card-custom h2{font-size:18px;margin:0;font-weight:600}
+.card-custom h3{font-size:15px;margin:14px 0 6px;font-weight:600}
+.hint{font-size:12px;color:var(--mut)}
+.drop{border:2px dashed #3b4763;border-radius:14px;padding:30px;text-align:center;color:var(--mut);cursor:pointer;transition:all 0.2s;background:rgba(0,0,0,0.2)}
+.drop:hover{border-color:var(--acc2);background:rgba(106,168,255,0.05)}
+.drop.over{border-color:var(--acc);color:#fff;background:rgba(94,232,138,0.1)}
+.drop b{color:#fff;font-size:16px}
+.form-select, .form-control{background:#0b1120;color:#fff;border:1px solid var(--line);border-radius:10px}
+.form-select:focus, .form-control:focus{background:#0b1120;color:#fff;border-color:var(--acc2);box-shadow:0 0 0 0.2rem rgba(106,168,255,0.25)}
+.form-label{font-size:12px;color:var(--mut);font-weight:500}
+#imgQueue,#audQueue{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:350px;overflow-y:auto}
+.q{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.q img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:repeating-conic-gradient(#2a2f3a 0 25%,#171b23 0 50%) 0 0/12px 12px}
+.badge-custom{width:48px;height:48px;display:grid;place-items:center;border-radius:8px;background:#24314f;font-size:18px;color:#9ecfff;flex-shrink:0}
+.q .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.q .st{font-size:11px;color:var(--mut);max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q .btn{border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s}
+.btn-view{background:#22314d;color:#9ecfff}
+.btn-view:hover{background:#2a3d5d;color:#b0d8ff}
+.btn-delete{background:#402020;color:#ff9d9d}
+.btn-delete:hover{background:#502828;color:#ffb8b8}
+.btn-download{background:var(--acc);color:#06130a}
+.btn-download:hover{background:#4ed07a;color:#081a0b}
+.btn-go{padding:14px;border:0;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;background:var(--acc);color:#06130a;width:100%;transition:all 0.2s}
+.btn-go:hover{background:#4ed07a;color:#081a0b}
+.btn-go:disabled{opacity:0.4;cursor:not-allowed}
+.btn-clear{padding:14px 20px;border-radius:12px;background:transparent;color:var(--mut);border:1px solid var(--line);cursor:pointer;transition:all 0.2s}
+.btn-clear:hover{background:var(--line);color:var(--txt)}
+#imgPreview{width:100%;max-height:350px;object-fit:contain;border-radius:12px;background:repeating-conic-gradient(#2a2f3a 0 25%,#171b23 0 50%) 0 0/20px 20px}
+.log{font-family:Consolas,Monaco,Courier New,monospace;font-size:12px;color:var(--mut);background:rgba(0,0,0,0.4);border-radius:10px;padding:12px;max-height:160px;overflow-y:auto;white-space:pre-wrap;border:1px solid var(--line)}
+.log::-webkit-scrollbar{width:8px}
+.log::-webkit-scrollbar-track{background:rgba(0,0,0,0.2)}
+.log::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.log::-webkit-scrollbar-thumb:hover{background:var(--mut)}
+audio{width:100%;margin-top:12px;border-radius:8px}
+.info-box{background:rgba(0,0,0,0.25);border:1px solid var(--line);border-radius:10px;padding:12px}
+a{color:var(--acc2);text-decoration:none}
+a:hover{color:#8ac0ff;text-decoration:underline}
+.steps{margin:8px 0 0 20px;padding:0;color:var(--mut);font-size:13px}
+.steps li{margin:6px 0}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:#2a3448;font-weight:500}
+.tag.ok{background:#1b4d1f;color:#8bff9b}
+.tag.warn{background:#5a3d0a;color:#ffd37a}
+.form-check-input:checked{background-color:var(--acc);border-color:var(--acc)}
+.form-check-input:focus{box-shadow:0 0 0 0.2rem rgba(94,232,138,0.25)}
+section{display:none}
+section.on{display:block}
+@media(max-width:768px){
+  .drop{padding:20px}
+  .q{flex-wrap:wrap;gap:8px}
+  .q .nm{width:100%;order:-1}
+}
+</style>
+</head>
+<body>
+<div class="container py-4">
+  <header class="text-center mb-4">
+    <h1 class="display-5 fw-bold mb-3">Herramientas para <span style="color:var(--acc)">BombSquad</span></h1>
+    <p class="text-muted mx-auto" style="max-width:720px">Todo lo necesario para crear tu contenido: convierte texturas <b>JPG / PNG ⇄ KTX / DDS</b> (transparente u opaco) y audios <b>MP3 ⇄ OGG / WAV</b>. Funciona 100% en tu navegador, sin subir archivos.</p>
+    <nav class="nav nav-pills justify-content-center mt-3 mb-2">
+      <button id="nHome" class="nav-link active"><i class="fas fa-home me-2"></i>Inicio</button>
+      <button id="nImg" class="nav-link"><i class="fas fa-image me-2"></i>Imágenes KTX / DDS</button>
+      <button id="nAud" class="nav-link"><i class="fas fa-music me-2"></i>Audio MP3 / OGG</button>
+      <button id="nHelp" class="nav-link"><i class="fas fa-question-circle me-2"></i>Recursos y ayuda</button>
+    </nav>
+  </header>
+  <main>
+<!-- INICIO -->
+<section id="sHome" class="on">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card-custom">
+        <div class="card-header">
+          <h2><i class="fas fa-image me-2" style="color:var(--acc2)"></i>Texturas para BombSquad</h2>
+        </div>
+        <div class="card-body">
+          <p class="hint mb-3">BombSquad usa DDS y KTX para personajes, mapas y carteles. Sube tus JPG/PNG con o sin transparencia y exporta a KTX (RGBA8/RGB8) o DDS (RGBA8 32-bit) con o sin mipmaps.</p>
+          <ol class="steps">
+            <li>Ve a <b>Imágenes</b>, arrastra tus PNG/JPG.</li>
+            <li>Elige salida: KTX, DDS, PNG o JPG.</li>
+            <li>Convierte y coloca el archivo en tu mod.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card-custom">
+        <div class="card-header">
+          <h2><i class="fas fa-music me-2" style="color:var(--warn)"></i>Audios para BombSquad</h2>
+        </div>
+        <div class="card-body">
+          <p class="hint mb-3">Efectos y música en OGG/WAV/MP3. Convierte MP3 a OGG y viceversa, previsualiza duración y canales antes de exportar.</p>
+          <ol class="steps">
+            <li>Ve a <b>Audio</b>, arrastra MP3/OGG/WAV.</li>
+            <li>Elige salida: OGG Opus, WAV o MP3.</li>
+            <li>Convierte y prueba en el juego.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-custom mt-3">
+    <div class="card-header">
+      <h2><i class="fas fa-lightbulb me-2" style="color:var(--warn)"></i>Flujo recomendado</h2>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="info-box">
+            <b><i class="fas fa-user me-2"></i>Personaje / cartel</b><br>
+            <span class="hint">PNG con alfa → KTX RGBA8 o DDS RGBA8 con mipmaps. Opaco → RGB8 / JPG para pesar menos.</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-box">
+            <b><i class="fas fa-volume-up me-2"></i>Sonido corto</b><br>
+            <span class="hint">WAV o OGG. Música larga → OGG o MP3 192kbps. Mantén sample rate original.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGENES -->
+<section id="sImg">
+  <div class="card-custom">
+    <div class="card-header">
+      <h2><i class="fas fa-images me-2" style="color:var(--acc)"></i>Convertidor de imágenes <span class="tag ok">JPG PNG ⇄ KTX DDS</span></h2>
+    </div>
+    <div class="card-body">
+      <p class="hint mb-3">Entrada: .jpg .png .webp .bmp .ktx .dds &nbsp;·&nbsp; Salida: .ktx .dds .png .jpg &nbsp;·&nbsp; KTX/DDS generados sin compresión de bloques (RGBA8/RGB8). Para ETC2/ASTC/DXT comprimido usa Mali Texture Compression Tool o Compressonator. En reversa se decodifican KTX sin comprimir y DDS RGBA8 + DXT1/DXT5.</p>
+      <div class="drop" id="imgDrop">
+        <b><i class="fas fa-cloud-upload-alt me-2"></i>Arrastra imágenes, KTX o DDS aquí</b><br>
+        <span class="hint">o clic para elegir (múltiple) · ✕ elimina de la cola</span>
+        <input type="file" id="imgFile" accept=".jpg,.jpeg,.png,.webp,.bmp,.ktx,.dds" multiple hidden>
+      </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Formato de salida</label>
+          <select class="form-select" id="imgTarget">
+            <option value="ktx" selected>KTX (KTX 1.0)</option>
+            <option value="dds">DDS (RGBA 32-bit)</option>
+            <option value="png">PNG (transparencia)</option>
+            <option value="jpg">JPG (opaco)</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Modo (transparencia)</label>
+          <select class="form-select" id="imgMode">
+            <option value="auto" selected>Auto (mantener alfa si existe)</option>
+            <option value="rgba">Forzar transparente RGBA</option>
+            <option value="rgb">Forzar opaco RGB</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Fondo al volver opaco / JPG</label>
+          <select class="form-select" id="imgBg">
+            <option value="black" selected>Negro</option>
+            <option value="white">Blanco</option>
+            <option value="magenta">Magenta</option>
+          </select>
+        </div>
+      </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Mipmaps (solo KTX/DDS)</label>
+          <select class="form-select" id="imgMip">
+            <option value="1" selected>Sí, hasta 1×1</option>
+            <option value="0">No, nivel 0</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">DDS: solo RGBA8 32-bit sin comprimir</label>
+          <select class="form-select" disabled><option>Máxima compatibilidad</option></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">KTX: RGBA8 / RGB8 sin comprimir</label>
+          <select class="form-select" disabled><option>Compatible Mali Tool</option></select>
+        </div>
+      </div>
+      <div class="d-flex align-items-center mt-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="imgFlip">
+          <label class="form-check-label" for="imgFlip">Flip Y (OpenGL)</label>
+        </div>
+        <span class="flex-grow-1"></span>
+        <span id="imgCount" class="hint">0 en cola</span>
+      </div>
+      <div id="imgQueue"><span class="hint">Cola vacía.</span></div>
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn-go" id="imgGo" disabled><i class="fas fa-cog me-2"></i>Convertir imágenes</button>
+        <button class="btn-clear" id="imgClear"><i class="fas fa-trash-alt me-2"></i>Vaciar</button>
+      </div>
+    </div>
+  </div>
+  <div class="card-custom mt-3">
+    <div class="card-header">
+      <h3><i class="fas fa-eye me-2"></i>Vista previa</h3>
+    </div>
+    <div class="card-body">
+      <img id="imgPreview" alt="" class="mb-3">
+      <div class="log" id="imgLog">Listo.\n</div>
+    </div>
+  </div>
+</section>
+
+<!-- AUDIO -->
+<section id="sAud">
+  <div class="card-custom">
+    <div class="card-header">
+      <h2><i class="fas fa-headphones me-2" style="color:var(--warn)"></i>Convertidor de audio <span class="tag warn">MP3 ⇄ OGG WAV</span></h2>
+    </div>
+    <div class="card-body">
+      <p class="hint mb-3">Entrada: .mp3 .ogg .oga .wav .m4a .webm · Salida: OGG Opus (MediaRecorder nativo), WAV PCM (nativo) o MP3 (lamejs por CDN). Se mantiene el sample rate original. Los sonidos cortos convienen en WAV/OGG.</p>
+      <div class="drop" id="audDrop">
+        <b><i class="fas fa-music me-2"></i>Arrastra audios aquí</b><br>
+        <span class="hint">o clic para elegir (múltiple) · ✕ elimina de la cola</span>
+        <input type="file" id="audFile" accept=".mp3,.ogg,.oga,.wav,.m4a,.webm,audio/*" multiple hidden>
+      </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Formato de salida</label>
+          <select class="form-select" id="audTarget">
+            <option value="ogg" selected>OGG Opus</option>
+            <option value="wav">WAV PCM 16-bit</option>
+            <option value="mp3">MP3 (lamejs)</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Calidad MP3</label>
+          <select class="form-select" id="mp3Bitrate">
+            <option value="128" selected>128 kbps</option>
+            <option value="192">192 kbps</option>
+            <option value="320">320 kbps</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Nota</label>
+          <select class="form-select" disabled><option>OGG usa grabación nativa</option></select>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <span id="audCount" class="hint">0 en cola</span>
+      </div>
+      <div id="audQueue"><span class="hint">Cola vacía.</span></div>
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn-go" id="audGo" disabled><i class="fas fa-cog me-2"></i>Convertir audios</button>
+        <button class="btn-clear" id="audClear"><i class="fas fa-trash-alt me-2"></i>Vaciar</button>
+      </div>
+    </div>
+  </div>
+  <div class="card-custom mt-3">
+    <div class="card-header">
+      <h3><i class="fas fa-play-circle me-2"></i>Reproductor / info</h3>
+    </div>
+    <div class="card-body">
+      <audio id="audPlayer" controls></audio>
+      <div id="audInfo" class="hint mt-2">Sin audio.</div>
+      <div class="log mt-3" id="audLog">Listo.\n</div>
+    </div>
+  </div>
+</section>
+
+<!-- AYUDA -->
+<section id="sHelp">
+  <div class="card-custom">
+    <div class="card-header">
+      <h2><i class="fas fa-link me-2" style="color:var(--acc2)"></i>Recursos verificados</h2>
+    </div>
+    <div class="card-body">
+      <p class="hint mb-2">Sucesor open-source de Mali (ASTC/ETC):</p>
+      <p class="mb-3"><a href="https://github.com/ARM-software/astc-encoder" target="_blank" rel="noopener"><i class="fab fa-github me-2"></i>github.com/ARM-software/astc-encoder</a></p>
+      <p class="hint mb-2">Instaladores originales Mali Texture Compression Tool v4.3.0 (archivo):</p>
+      <p class="mb-3"><a href="https://archive.org/download/mali-texture-compression-tool" target="_blank" rel="noopener"><i class="fas fa-archive me-2"></i>archive.org/download/mali-texture-compression-tool</a></p>
+      <p class="hint mb-2">Codificador MP3 usado por esta página (se carga solo si exportas a MP3):</p>
+      <p><a href="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js" target="_blank" rel="noopener"><i class="fas fa-code me-2"></i>cdnjs lamejs 1.2.1</a></p>
+    </div>
+  </div>
+  <div class="card-custom mt-3">
+    <div class="card-header">
+      <h2><i class="fas fa-exclamation-triangle me-2" style="color:var(--warn)"></i>Limitaciones honestas</h2>
+    </div>
+    <div class="card-body">
+      <ul class="steps">
+        <li>KTX que se genera es <b>sin compresión</b> (RGBA8/RGB8). Es válido y lo abre Mali Tool, pero pesa más que ETC2/ASTC.</li>
+        <li>DDS que se genera es <b>RGBA 32-bit sin comprimir</b>. En reversa se leen RGBA8 + DXT1/DXT5.</li>
+        <li>KTX comprimido (glType=0, ETC2/ASTC) no se decodifica en web; usa Mali Tool / astcenc.</li>
+        <li>OGG se genera como <b>Opus vía MediaRecorder</b> del navegador. Si tu navegador solo da WebM, se guarda .webm y se avisa.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js" defer></script>
+<script>
+// ===== Navegación =====
+const secs={nHome:'sHome',nImg:'sImg',nAud:'sAud',nHelp:'sHelp'};
+for(const[id,s]of Object.entries(secs)){document.getElementById(id).onclick=()=>{for(const b of Object.keys(secs))document.getElementById(b).classList.remove('active');document.getElementById(id).classList.add('active');for(const x of Object.values(secs))document.getElementById(x).classList.remove('on');document.getElementById(s).classList.add('on');};}
+const $=id=>document.getElementById(id);
+const ilog=m=>{$('imgLog').textContent+=m+"\n";$('imgLog').scrollTop=1e9;};
+const alog=m=>{$('audLog').textContent+=m+"\n";$('audLog').scrollTop=1e9;};
+
+// ===== Utilidades imagen =====
+const GL={U8:0x1401,RGB:0x1907,RGBA:0x1908,RGB8:0x8051,RGBA8:0x8058};
+const KID=[0xAB,0x4B,0x54,0x58,0x20,0x31,0x31,0xBB,0x0D,0x0A,0x1A,0x0A];
+const loadImg=url=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('No se pudo leer imagen'));i.src=url;});
+function canvasOf(rgba,w,h){const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(rgba),w,h),0,0);return c;}
+function rgbaOf(img){const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0);const d=x.getImageData(0,0,c.width,c.height);return{w:c.width,h:c.height,data:new Uint8Array(d.data)};}
+function hasAlphaArr(a){for(let i=3;i<a.length;i+=4)if(a[i]<255)return true;return false;}
+function flipArr(a,w,h){const o=new Uint8Array(a.length),r=w*4;for(let y=0;y<h;y++)o.set(a.subarray(y*r,(y+1)*r),(h-1-y)*r);return o;}
+function compToBg(a,w,h,bg){const col=bg==='white'?255:bg==='magenta'?null:0;const o=new Uint8Array(a);for(let i=0;i<o.length;i+=4){const al=o[i+3]/255;let br=0,bgc=0,bb=0;if(bg==='white'){br=bgc=bb=255;}else if(bg==='magenta'){br=255;bb=255;}o[i]=Math.round(o[i]*al+br*(1-al));o[i+1]=Math.round(o[i+1]*al+bgc*(1-al));o[i+2]=Math.round(o[i+2]*al+bb*(1-al));o[i+3]=255;}return o;}
+function padRows(px,w,bpp){const r=w*bpp,p=(r+3)&~3;if(p===r)return px;const o=new Uint8Array(p*(px.length/r));for(let i=0;i<px.length/r;i++)o.set(px.subarray(i*r,(i+1)*r),i*p);return o;}
+function buildKTX(levels,w,h,rgba){const glF=rgba?GL.RGBA:GL.RGB,glI=rgba?GL.RGBA8:GL.RGB8;let t=64;for(const l of levels)t+=4+l.length+((4-(l.length%4))%4);
+const b=new ArrayBuffer(t),dv=new DataView(b),u=new Uint8Array(b);KID.forEach((x,i)=>u[i]=x);
+dv.setUint32(12,0x04030201,true);dv.setUint32(16,GL.U8,true);dv.setUint32(20,1,true);dv.setUint32(24,glF,true);dv.setUint32(28,glI,true);dv.setUint32(32,glF,true);
+dv.setUint32(36,w,true);dv.setUint32(40,h,true);dv.setUint32(44,0,true);dv.setUint32(48,0,true);dv.setUint32(52,1,true);dv.setUint32(56,levels.length,true);dv.setUint32(60,0,true);
+let o=64;for(const l of levels){dv.setUint32(o,l.length,true);o+=4;u.set(l,o);o+=l.length;o+=(4-(l.length%4))%4;}return b;}
+function parseKTX(buf){const u=new Uint8Array(buf),dv=new DataView(buf);
+for(let i=0;i<12;i++)if(u[i]!==KID[i])throw new Error('No es KTX 1.0');
+if(dv.getUint32(12,true)!==0x04030201)throw new Error('KTX big-endian no soportado');
+const glType=dv.getUint32(16,true),glF=dv.getUint32(24,true),glI=dv.getUint32(28,true);
+const w=dv.getUint32(36,true),h=dv.getUint32(40,true),m=dv.getUint32(56,true)||1,kv=dv.getUint32(60,true);
+if(glType===0)throw new Error('KTX comprimido (0x'+glI.toString(16)+'). Usa Mali Tool/astcenc.');
+if(glType!==GL.U8)throw new Error('glType 0x'+glType.toString(16)+' no soportado');
+const bpp=glF===GL.RGBA?4:glF===GL.RGB?3:0;if(!bpp)throw new Error('glFormat 0x'+glF.toString(16)+' no soportado');
+let off=64+kv;const lv=[];for(let i=0;i<m;i++){const s=dv.getUint32(off,true);off+=4;lv.push(u.slice(off,off+s));off+=s;off+=(4-(s%4))%4;}
+const raw=lv[0],pr=(w*bpp+3)&~3,out=new Uint8Array(w*h*4);
+for(let r=0;r<h;r++)for(let c=0;c<w;c++){const s=r*pr+c*bpp,d=(r*w+c)*4;if(bpp===4){out[d]=raw[s];out[d+1]=raw[s+1];out[d+2]=raw[s+2];out[d+3]=raw[s+3];}else{out[d]=raw[s];out[d+1]=raw[s+1];out[d+2]=raw[s+2];out[d+3]=255;}}
+return{w,h,data:out,levels:lv.length};}
+
+// ===== DDS =====
+function buildDDS(levelsRGBA,w,h,mips){ // levelsRGBA: [{w,h,data RGBA}]
+const n=levelsRGBA.length;const buf=new ArrayBuffer(128+levelsRGBA.reduce((a,l)=>a+l.data.length,0));const dv=new DataView(buf),u=new Uint8Array(buf);
+dv.setUint32(0,0x20534444,true);dv.setUint32(4,124,true);
+let flags=0x1|0x2|0x4|0x1000|0x8;if(n>1)flags|=0x20000;dv.setUint32(8,flags,true);
+dv.setUint32(12,h,true);dv.setUint32(16,w,true);dv.setUint32(20,w*4,true);dv.setUint32(24,0,true);dv.setUint32(28,n,true);
+for(let i=0;i<11;i++)dv.setUint32(32+i*4,0,true);
+dv.setUint32(76,32,true);dv.setUint32(80,0x41,true);dv.setUint32(84,0,true);dv.setUint32(88,32,true);
+dv.setUint32(92,0x00FF0000,true);dv.setUint32(96,0x0000FF00,true);dv.setUint32(100,0x000000FF,true);dv.setUint32(104,0xFF000000,true);
+let caps=0x1000;if(n>1)caps|=0x8|0x400000;dv.setUint32(108,caps,true);dv.setUint32(112,0,true);dv.setUint32(116,0,true);dv.setUint32(120,0,true);dv.setUint32(124,0,true);
+let off=128;for(const l of levelsRGBA){const bgra=new Uint8Array(l.data.length);for(let i=0;i<l.data.length;i+=4){bgra[i]=l.data[i+2];bgra[i+1]=l.data[i+1];bgra[i+2]=l.data[i];bgra[i+3]=l.data[i+3];}u.set(bgra,off);off+=bgra.length;}
+return buf;}
+function dxtColor(c){const r=(c>>11)&31,g=(c>>5)&63,b=c&31;return[(r<<3)|(r>>2),(g<<2)|(g>>4),(b<<3)|(b>>2)];}
+function decDXT1(w,h,src){const out=new Uint8Array(w*h*4);const bw=(w+3)>>2,bh=(h+3)>>2;let p=0;
+for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){const c0=src[p]|(src[p+1]<<8),c1=src[p+2]|(src[p+3]<<8);const[a0r,a0g,a0b]=dxtColor(c0),[a1r,a1g,a1b]=dxtColor(c1);
+let pal;if(c0>c1){pal=[[a0r,a0g,a0b,255],[a1r,a1g,a1b,255],[(2*a0r+a1r)/3|0,(2*a0g+a1g)/3|0,(2*a0b+a1b)/3|0,255],[(a0r+2*a1r)/3|0,(a0g+2*a1g)/3|0,(a0b+2*a1b)/3|0,255]];}else{pal=[[a0r,a0g,a0b,255],[a1r,a1g,a1b,255],[(a0r+a1r)/2|0,(a0g+a1g)/2|0,(a0b+a1b)/2|0,255],[0,0,0,0]];}
+const idx=src[p+4]|(src[p+5]<<8)|(src[p+6]<<16)|(src[p+7]<<24);p+=8;
+for(let y=0;y<4;y++)for(let x=0;x<4;x++){const px=bx*4+x,py=by*4+y;if(px>=w||py>=h)continue;const s=pal[(idx>>(2*(4*y+x)))&3],d=(py*w+px)*4;out[d]=s[0];out[d+1]=s[1];out[d+2]=s[2];out[d+3]=s[3];}}
+return out;}
+function decDXT5(w,h,src){const out=new Uint8Array(w*h*4);const bw=(w+3)>>2,bh=(h+3)>>2;let p=0;
+for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){const a0=src[p],a1=src[p+1];const ab=new Uint8Array(8);ab[0]=a0;ab[1]=a1;
+if(a0>a1){for(let i=0;i<6;i++)ab[2+i]=((6-i)*a0+(1+i)*a1)/7|0;}else{for(let i=0;i<4;i++)ab[2+i]=((4-i)*a0+(1+i)*a1)/5|0;ab[6]=0;ab[7]=255;}
+let ai=0;for(let i=0;i<6;i++)ai|=(src[p+2+i]<< (8*i));p+=8;
+const c0=src[p]|(src[p+1]<<8),c1=src[p+2]|(src[p+3]<<8);const[a0r,a0g,a0b]=dxtColor(c0),[a1r,a1g,a1b]=dxtColor(c1);
+const pal=[[a0r,a0g,a0b],[a1r,a1g,a1b],[(2*a0r+a1r)/3|0,(2*a0g+a1g)/3|0,(2*a0b+a1b)/3|0],[(a0r+2*a1r)/3|0,(a0g+2*a1g)/3|0,(a0b+2*a1b)/3|0]];
+const idx=src[p+4]|(src[p+5]<<8)|(src[p+6]<<16)|(src[p+7]<<24);p+=8;
+for(let y=0;y<4;y++)for(let x=0;x<4;x++){const px=bx*4+x,py=by*4+y;if(px>=w||py>=h)continue;const ci=(idx>>(2*(4*y+x)))&3,alp=ab[(ai>>(3*(4*y+x)))&7],d=(py*w+px)*4;out[d]=pal[ci][0];out[d+1]=pal[ci][1];out[d+2]=pal[ci][2];out[d+3]=alp;}}
+return out;}
+function parseDDS(buf){const dv=new DataView(buf),u=new Uint8Array(buf);
+if(dv.getUint32(0,true)!==0x20534444)throw new Error('No es DDS');
+const h=dv.getUint32(12,true),w=dv.getUint32(16,true);let mips=dv.getUint32(28,true)||1;
+const pf=dv.getUint32(80,true),fcc=dv.getUint32(84,true),bits=dv.getUint32(88,true);
+const rM=dv.getUint32(92,true),gM=dv.getUint32(96,true),bM=dv.getUint32(100,true),aM=dv.getUint32(104,true);
+const fccS=String.fromCharCode(u[84],u[85],u[86],u[87]);
+let off=128;
+const lvlSize=(ww,hh)=>fccS==='DXT1'?(((ww+3)>>2)*((hh+3)>>2)*8):(fccS==='DXT5'||fccS==='DXT3')?(((ww+3)>>2)*((hh+3)>>2)*16):ww*hh*4;
+let sz=lvlSize(w,h);if(off+sz>u.length)throw new Error('DDS truncado');
+const raw=u.slice(off,off+sz);
+if(fccS==='DXT1')return{w,h,data:decDXT1(w,h,raw),levels:mips,fmt:'DXT1'};
+if(fccS==='DXT5')return{w,h,data:decDXT5(w,h,raw),levels:mips,fmt:'DXT5'};
+if(fccS==='DXT3'){ // alfa explícita 4-bit + color DXT1
+const bw=(w+3)>>2,bh=(h+3)>>2,out=new Uint8Array(w*h*4);let p=0;
+const colBlocks=[]; // pre-decodificar colores reutilizando DXT1 sin alfa? simplificado: decodifica color ignorando alfa y luego aplica alfa
+const colOnly=new Uint8Array(raw.length); // no trivial; implementa directo:
+for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){const alphaBytes=raw.slice(p,p+8);p+=8;const c0=raw[p]|(raw[p+1]<<8),c1=raw[p+2]|(raw[p+3]<<8);
+const[a0r,a0g,a0b]=dxtColor(c0),[a1r,a1g,a1b]=dxtColor(c1);const pal=[[a0r,a0g,a0b],[a1r,a1g,a1b],[(2*a0r+a1r)/3|0,(2*a0g+a1g)/3|0,(2*a0b+a1b)/3|0],[(a0r+2*a1r)/3|0,(a0g+2*a1g)/3|0,(a0b+2*a1b)/3|0]];
+const idx=raw[p+4]|(raw[p+5]<<8)|(raw[p+6]<<16)|(raw[p+7]<<24);p+=8;
+for(let y=0;y<4;y++)for(let x=0;x<4;x++){const px=bx*4+x,py=by*4+y;if(px>=w||py>=h)continue;const ci=(idx>>(2*(4*y+x)))&3;const d=(py*w+px)*4;
+const a4=(alphaBytes[(4*y+x)>>1]>>(((4*y+x)&1)*4))&15;out[d]=pal[ci][0];out[d+1]=pal[ci][1];out[d+2]=pal[ci][2];out[d+3]=(a4*255/15)|0;}}
+return{w,h,data:out,levels:mips,fmt:'DXT3'};}
+if(fcc!==0)throw new Error('FourCC '+fccS+' no soportado');
+if(bits!==32)throw new Error('DDS de '+bits+'bpp no soportado (solo 32-bit, DXT1/3/5)');
+const out=new Uint8Array(w*h*4);const isBGRA=(rM===0x00FF0000);
+for(let i=0,j=0;i<out.length;i+=4,j+=4){if(isBGRA){out[i]=raw[j+2];out[i+1]=raw[j+1];out[i+2]=raw[j];out[i+3]=raw[j+3];}else{out[i]=raw[j];out[i+1]=raw[j+1];out[i+2]=raw[j+2];out[i+3]=raw[j+3];}}
+return{w,h,data:out,levels:mips,fmt:'RGBA8'};}
+
+// ===== Cola imagenes =====
+let imgQ=[],_iq=0;
+const imgKind=f=>/\.ktx$/i.test(f.name)?'ktx':/\.dds$/i.test(f.name)?'dds':'img';
+$('imgDrop').onclick=e=>{if(e.target.closest('.q'))return;$('imgFile').click();};
+for(const e of['dragover','dragenter'])$('imgDrop').addEventListener(e,ev=>{ev.preventDefault();$('imgDrop').classList.add('over');});
+for(const e of['dragleave','drop'])$('imgDrop').addEventListener(e,ev=>{ev.preventDefault();$('imgDrop').classList.remove('over');});
+$('imgDrop').addEventListener('drop',ev=>addImg(ev.dataTransfer.files));
+$('imgFile').addEventListener('change',ev=>{addImg(ev.target.files);ev.target.value='';});
+$('imgClear').onclick=()=>{imgQ=[];renderImg();$('imgPreview').src='';ilog('Cola vaciada.');};
+function addImg(fs){for(const f of fs)imgQ.push({id:++_iq,file:f,kind:imgKind(f),status:'pendiente',url:imgKind(f)==='img'?URL.createObjectURL(f):null,outBlob:null,outName:null});ilog(`Añadidos ${fs.length}. Cola: ${imgQ.length}`);renderImg();if(imgQ.length)prevImg(imgQ[0].id);}
+function renderImg(){$('imgCount').textContent=imgQ.length+' en cola';$('imgGo').disabled=!imgQ.length;const b=$('imgQueue');if(!imgQ.length){b.innerHTML='<span class="hint">Cola vacía.</span>';return;}b.innerHTML='';
+for(const q of imgQ){const d=document.createElement('div');d.className='q';
+d.innerHTML=q.kind==='img'?'<img><span class="nm"></span><span class="st"></span>':'<div class="badge-custom"><i class="fas fa-file-image"></i></div><span class="nm"></span><span class="st"></span>';
+if(q.kind==='img')d.querySelector('img').src=q.url;
+d.querySelector('.nm').textContent=q.file.name;d.querySelector('.st').textContent=q.status;
+const v=document.createElement('button');v.className='btn btn-view';v.innerHTML='<i class="fas fa-eye me-1"></i>Ver';v.onclick=()=>prevImg(q.id);
+const x=document.createElement('button');x.className='btn btn-delete';x.innerHTML='<i class="fas fa-times"></i>';x.onclick=()=>{imgQ=imgQ.filter(y=>y.id!==q.id);ilog('Eliminado: '+q.file.name);renderImg();};
+d.append(v,x);if(q.outBlob){const dl=document.createElement('button');dl.className='btn btn-download';dl.innerHTML='<i class="fas fa-download me-1"></i>Descargar';dl.onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(q.outBlob);a.download=q.outName;a.click();};d.append(dl);}b.append(d);}}
+async function srcToRGBA(q){if(q.kind==='img'){const im=await loadImg(q.url);const r=rgbaOf(im);return{...r,img:im};}const buf=await q.file.arrayBuffer();
+if(q.kind==='ktx'){const k=parseKTX(buf);return{w:k.w,h:k.h,data:k.data};}const d=parseDDS(buf);return{w:d.w,h:d.h,data:d.data};}
+async function prevImg(id){const q=imgQ.find(x=>x.id===id);if(!q)return;try{const s=await srcToRGBA(q);$('imgPreview').src=canvasOf(s.data,s.w,s.h).toDataURL();q.status=`${s.w}×${s.h}`;}catch(e){q.status='error';ilog('Vista previa '+q.file.name+': '+e.message);}renderImg();}
+function mipChain(rgba,w,h,withMip){const c0=canvasOf(rgba,w,h);const chain=[{w,h,data:new Uint8Array(rgba)}];if(!withMip)return chain;let cw=w,ch=h;while(cw>1||ch>1){cw=Math.max(1,cw>>1);ch=Math.max(1,ch>>1);const c=document.createElement('canvas');c.width=cw;c.height=ch;c.getContext('2d').drawImage(c0,0,0,cw,ch);const d=c.getContext('2d').getImageData(0,0,cw,ch);chain.push({w:cw,h:ch,data:new Uint8Array(d.data)});}return chain;}
+$('imgGo').onclick=async()=>{$('imgGo').disabled=true;$('imgGo').innerHTML='<i class="fas fa-spinner fa-spin me-2"></i>Convirtiendo…';
+const target=$('imgTarget').value,mode=$('imgMode').value,bg=$('imgBg').value,flip=$('imgFlip').checked,withMip=$('imgMip').value==='1';
+for(const q of imgQ){try{q.status='convirtiendo…';renderImg();let s=await srcToRGBA(q);let data=new Uint8Array(s.data);
+if(flip)data=flipArr(data,s.w,s.h);
+const alpha=hasAlphaArr(data);let rgba=mode==='rgba'?true:mode==='rgb'?false:alpha;
+if((target==='jpg')||(!rgba&&(target==='ktx'||target==='dds'||target==='png'))){ if(target==='jpg'||!rgba&&mode!=='auto'||target==='jpg'){/* comp */} }
+if(target==='jpg'||(!rgba&&mode==='rgb')){data=compToBg(data,s.w,s.h,bg);rgba=false;}
+const base=q.file.name.replace(/\.[^.]+$/,'');
+if(target==='ktx'){const chain=mipChain(data,s.w,s.h,withMip);const lv=chain.map(l=>{if(rgba)return padRows(new Uint8Array(l.data),l.w,4);const o=new Uint8Array(l.w*l.h*3);for(let i=0,j=0;i<l.data.length;i+=4,j+=3){o[j]=l.data[i];o[j+1]=l.data[i+1];o[j+2]=l.data[i+2];}return padRows(o,l.w,3);});
+q.outBlob=new Blob([buildKTX(lv,s.w,s.h,rgba)],{type:'image/ktx'});q.outName=`${base}_${rgba?'RGBA8':'RGB8'}${withMip?'_mip':''}.ktx`;}
+else if(target==='dds'){const chain=mipChain(data,s.w,s.h,withMip);q.outBlob=new Blob([buildDDS(chain,s.w,s.h,withMip)],{type:'image/vnd-ms.dds'});q.outName=`${base}_RGBA8${withMip?'_mip':''}.dds`;}
+else{const c=canvasOf(data,s.w,s.h);
+if(target==='png'){q.outBlob=await new Promise(r=>c.toBlob(r,'image/png'));q.outName=base+'.png';}
+else{const t=document.createElement('canvas');t.width=s.w;t.height=s.h;const x=t.getContext('2d');x.fillStyle=bg==='white'?'#fff':bg==='magenta'?'#f0f':'#000';x.fillRect(0,0,s.w,s.h);x.drawImage(c,0,0);q.outBlob=await new Promise(r=>t.toBlob(r,'image/jpeg',0.92));q.outName=base+'.jpg';}}
+q.status='OK → '+q.outName;ilog(`OK: ${q.file.name} → ${q.outName} (${s.w}×${s.h})`);
+const a=document.createElement('a');a.href=URL.createObjectURL(q.outBlob);a.download=q.outName;a.click();await new Promise(r=>setTimeout(r,350));
+}catch(e){q.status='error';ilog('ERROR '+q.file.name+': '+e.message);}renderImg();}
+$('imgGo').disabled=false;$('imgGo').innerHTML='<i class="fas fa-cog me-2"></i>Convertir imágenes';ilog('Lote terminado. Usa ↓ para re-descargar o ✕ para eliminar.');};
+
+// ===== Audio =====
+let audQ=[],_aq=0,actx=null;
+const AC=()=>actx||(actx=new (window.AudioContext||window.webkitAudioContext)());
+$('audDrop').onclick=e=>{if(e.target.closest('.q'))return;$('audFile').click();};
+for(const e of['dragover','dragenter'])$('audDrop').addEventListener(e,ev=>{ev.preventDefault();$('audDrop').classList.add('over');});
+for(const e of['dragleave','drop'])$('audDrop').addEventListener(e,ev=>{ev.preventDefault();$('audDrop').classList.remove('over');});
+$('audDrop').addEventListener('drop',ev=>addAud(ev.dataTransfer.files));
+$('audFile').addEventListener('change',ev=>{addAud(ev.target.files);ev.target.value='';});
+$('audClear').onclick=()=>{audQ=[];renderAud();alog('Cola vaciada.');};
+function addAud(fs){for(const f of fs)audQ.push({id:++_aq,file:f,status:'pendiente',url:URL.createObjectURL(f),buf:null,outBlob:null,outName:null,info:''});alog(`Añadidos ${fs.length}. Cola: ${audQ.length}`);renderAud();for(const q of audQ.slice(-fs.length))decodeInfo(q);}
+async function decodeInfo(q){try{const ab=await q.file.arrayBuffer();const b=await AC().decodeAudioData(ab.slice(0));q.buf=b;q.info=`${b.duration.toFixed(1)}s · ${b.sampleRate}Hz · ${b.numberOfChannels}ch`;q.status='listo';}catch(e){q.status='no decodificable';q.info=String(e.message||e);}renderAud();}
+function renderAud(){$('audCount').textContent=audQ.length+' en cola';$('audGo').disabled=!audQ.length;const b=$('audQueue');if(!audQ.length){b.innerHTML='<span class="hint">Cola vacía.</span>';return;}b.innerHTML='';
+for(const q of audQ){const d=document.createElement('div');d.className='q';d.innerHTML='<div class="badge-custom"><i class="fas fa-music"></i></div><span class="nm"></span><span class="st"></span>';
+d.querySelector('.nm').textContent=q.file.name;d.querySelector('.nm').title=q.file.name+' '+q.info;d.querySelector('.st').textContent=q.status+(q.info?' · '+q.info:'');
+const v=document.createElement('button');v.className='btn btn-view';v.innerHTML='<i class="fas fa-play me-1"></i>Oír';v.onclick=()=>{$('audPlayer').src=q.url;$('audInfo').textContent=q.file.name+' — '+(q.info||'');};
+const x=document.createElement('button');x.className='btn btn-delete';x.innerHTML='<i class="fas fa-times"></i>';x.onclick=()=>{audQ=audQ.filter(y=>y.id!==q.id);alog('Eliminado: '+q.file.name);renderAud();};
+d.append(v,x);if(q.outBlob){const dl=document.createElement('button');dl.className='btn btn-download';dl.innerHTML='<i class="fas fa-download me-1"></i>Descargar';dl.onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(q.outBlob);a.download=q.outName;a.click();};d.append(dl);}b.append(d);}}
+function wavBlob(buf){const n=buf.numberOfChannels,sr=buf.sampleRate,len=buf.length,bytes=44+len*n*2;const ab=new ArrayBuffer(bytes),dv=new DataView(ab);let o=0;
+const ws=(s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o++,s.charCodeAt(i));};
+ws('RIFF');dv.setUint32(o,bytes-8,true);o+=4;ws('WAVE');ws('fmt ');dv.setUint32(o,16,true);o+=4;dv.setUint16(o,1,true);o+=2;dv.setUint16(o,n,true);o+=2;dv.setUint32(o,sr,true);o+=4;dv.setUint32(o,sr*n*2,true);o+=4;dv.setUint16(o,n*2,true);o+=2;dv.setUint16(o,16,true);o+=2;ws('data');dv.setUint32(o,len*n*2,true);o+=4;
+const ch=[];for(let c=0;c<n;c++)ch.push(buf.getChannelData(c));
+for(let i=0;i<len;i++)for(let c=0;c<n;c++){let s=Math.max(-1,Math.min(1,ch[c][i]));dv.setInt16(o,s<0?s*0x8000:s*0x7FFF,true);o+=2;}
+return new Blob([ab],{type:'audio/wav'});}
+function ensureLame(){return new Promise((res,rej)=>{if(window.lamejs&&window.lamejs.Mp3Encoder)return res();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js';s.onload=()=>res();s.onerror=()=>rej(new Error('No se pudo cargar lamejs (sin internet)'));document.head.append(s);});}
+async function mp3Blob(buf,kbps){await ensureLame();const n=buf.numberOfChannels,sr=buf.sampleRate;const enc=new lamejs.Mp3Encoder(n,sr,kbps);const L=buf.getChannelData(0),R=n>1?buf.getChannelData(1):null;
+const i16=a=>{const o=new Int16Array(a.length);for(let i=0;i<a.length;i++){const s=Math.max(-1,Math.min(1,a[i]));o[i]=s<0?s*0x8000:s*0x7FFF;}return o;};
+const l=i16(L),r=R?i16(R):null,data=[];const N=1152;
+for(let i=0;i<l.length;i+=N){const cl=l.subarray(i,i+N),cr=r?r.subarray(i,i+N):cl;const d=n>1?enc.encodeBuffer(cl,cr):enc.encodeBuffer(cl);if(d.length)data.push(new Int8Array(d));}
+const end=enc.flush();if(end.length)data.push(new Int8Array(end));return new Blob(data,{type:'audio/mpeg'});}
+function pickMime(){const c=['audio/ogg;codecs=opus','audio/ogg','audio/webm;codecs=opus','audio/webm'];for(const m of c){try{if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m))return m;}catch(e){}}return '';}
+async function oggBlob(buf){const mime=pickMime();if(!mime)throw new Error('MediaRecorder OGG no soportado en este navegador. Usa WAV.');
+const ctx=AC();await ctx.resume();const src=ctx.createBufferSource();src.buffer=buf;const dest=ctx.createMediaStreamDestination();src.connect(dest);
+const rec=new MediaRecorder(dest.stream,{mimeType:mime});const ch=[];await new Promise((res,rej)=>{rec.ondataavailable=e=>{if(e.data.size)ch.push(e.data);};rec.onstop=res;rec.onerror=rej;rec.start(200);src.start();src.onended=()=>setTimeout(()=>{try{rec.stop();}catch(e){res();}},150);setTimeout(()=>{try{rec.stop();}catch(e){}},(buf.duration*1000)+1200);});
+const type=mime.includes('ogg')?'audio/ogg':'audio/webm';return{blob:new Blob(ch,{type}),isOgg:mime.includes('ogg'),mime};}
+$('audGo').onclick=async()=>{$('audGo').disabled=true;$('audGo').innerHTML='<i class="fas fa-spinner fa-spin me-2"></i>Convirtiendo…';const target=$('audTarget').value;
+for(const q of audQ){try{q.status='convirtiendo…';renderAud();
+if(!q.buf){const ab=await q.file.arrayBuffer();q.buf=await AC().decodeAudioData(ab);}
+const base=q.file.name.replace(/\.[^.]+$/,'');
+if(target==='wav'){q.outBlob=wavBlob(q.buf);q.outName=base+'.wav';}
+else if(target==='mp3'){q.outBlob=await mp3Blob(q.buf,parseInt($('mp3Bitrate').value,10));q.outName=base+'.mp3';}
+else{const r=await oggBlob(q.buf);q.outBlob=r.blob;q.outName=base+(r.isOgg?'.ogg':'.webm');if(!r.isOgg)alog('Aviso: tu navegador grabó '+r.mime+', se guardó .webm (renombrar a .ogg puede no valer para BombSquad).');}
+q.status='OK → '+q.outName;alog(`OK: ${q.file.name} → ${q.outName}`);
+const a=document.createElement('a');a.href=URL.createObjectURL(q.outBlob);a.download=q.outName;a.click();await new Promise(r=>setTimeout(r,400));
+}catch(e){q.status='error';alog('ERROR '+q.file.name+': '+(e.message||e));}renderAud();}
+$('audGo').disabled=false;$('audGo').innerHTML='<i class="fas fa-cog me-2"></i>Convertir audios';alog('Lote terminado.');};
+</script>
+</body>
+</html>
