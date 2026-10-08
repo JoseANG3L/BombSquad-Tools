@@ -462,12 +462,21 @@ body {
 
 /* ===== Preview / log / player ===== */
 #imgPreview {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  height: auto;
   max-height: 350px;
   object-fit: contain;
   border-radius: 12px;
   background: repeating-conic-gradient(#2a2f3a 0 25%, #171b23 0 50%) 0 0 / 20px 20px;
   border: 1px solid var(--line);
+  cursor: zoom-in;
+}
+.preview-wrap {
+  text-align: center;
+}
+#imgDims {
+  font-size: 12px;
 }
 :root[data-theme="light"] #imgPreview {
   background: repeating-conic-gradient(#d7dfe9 0 25%, #f3f6fa 0 50%) 0 0 / 20px 20px;

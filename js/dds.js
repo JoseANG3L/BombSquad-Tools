@@ -97,6 +97,29 @@ function decDXT5(w, h, src) {
   return out;
 }
 
+function decDXT3(w, h, src) {
+  const bw = (w + 3) >> 2, bh = (h + 3) >> 2, out = new Uint8Array(w * h * 4);
+  let p = 0;
+  for (let by = 0; by < bh; by++) for (let bx = 0; bx < bw; bx++) {
+    const alphaBytes = src.slice(p, p + 8); p += 8;
+    const c0 = src[p] | (src[p + 1] << 8), c1 = src[p + 2] | (src[p + 3] << 8);
+    const [a0r, a0g, a0b] = dxtColor(c0), [a1r, a1g, a1b] = dxtColor(c1);
+    const pal = [[a0r, a0g, a0b], [a1r, a1g, a1b],
+      [(2 * a0r + a1r) / 3 | 0, (2 * a0g + a1g) / 3 | 0, (2 * a0b + a1b) / 3 | 0],
+      [(a0r + 2 * a1r) / 3 | 0, (a0g + 2 * a1g) / 3 | 0, (a0b + 2 * a1b) / 3 | 0]];
+    const idx = src[p + 4] | (src[p + 5] << 8) | (src[p + 6] << 16) | (src[p + 7] << 24);
+    p += 8;
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+      const px = bx * 4 + x, py = by * 4 + y;
+      if (px >= w || py >= h) continue;
+      const ci = (idx >> (2 * (4 * y + x))) & 3, d = (py * w + px) * 4;
+      const a4 = (alphaBytes[(4 * y + x) >> 1] >> (((4 * y + x) & 1) * 4)) & 15;
+      out[d] = pal[ci][0]; out[d + 1] = pal[ci][1]; out[d + 2] = pal[ci][2]; out[d + 3] = (a4 * 255 / 15) | 0;
+    }
+  }
+  return out;
+}
+
 function parseDDS(buf) {
   const dv = new DataView(buf), u = new Uint8Array(buf);
   if (dv.getUint32(0, true) !== 0x20534444) throw new Error('No es DDS');
@@ -113,28 +136,7 @@ function parseDDS(buf) {
   const raw = u.slice(off, off + sz);
   if (fccS === 'DXT1') return { w, h, data: decDXT1(w, h, raw), levels: mips, fmt: 'DXT1' };
   if (fccS === 'DXT5') return { w, h, data: decDXT5(w, h, raw), levels: mips, fmt: 'DXT5' };
-  if (fccS === 'DXT3') {
-    const bw = (w + 3) >> 2, bh = (h + 3) >> 2, out = new Uint8Array(w * h * 4);
-    let p = 0;
-    for (let by = 0; by < bh; by++) for (let bx = 0; bx < bw; bx++) {
-      const alphaBytes = raw.slice(p, p + 8); p += 8;
-      const c0 = raw[p] | (raw[p + 1] << 8), c1 = raw[p + 2] | (raw[p + 3] << 8);
-      const [a0r, a0g, a0b] = dxtColor(c0), [a1r, a1g, a1b] = dxtColor(c1);
-      const pal = [[a0r, a0g, a0b], [a1r, a1g, a1b],
-        [(2 * a0r + a1r) / 3 | 0, (2 * a0g + a1g) / 3 | 0, (2 * a0b + a1b) / 3 | 0],
-        [(a0r + 2 * a1r) / 3 | 0, (a0g + 2 * a1g) / 3 | 0, (a0b + 2 * a1b) / 3 | 0]];
-      const idx = raw[p + 4] | (raw[p + 5] << 8) | (raw[p + 6] << 16) | (raw[p + 7] << 24);
-      p += 8;
-      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
-        const px = bx * 4 + x, py = by * 4 + y;
-        if (px >= w || py >= h) continue;
-        const ci = (idx >> (2 * (4 * y + x))) & 3, d = (py * w + px) * 4;
-        const a4 = (alphaBytes[(4 * y + x) >> 1] >> (((4 * y + x) & 1) * 4)) & 15;
-        out[d] = pal[ci][0]; out[d + 1] = pal[ci][1]; out[d + 2] = pal[ci][2]; out[d + 3] = (a4 * 255 / 15) | 0;
-      }
-    }
-    return { w, h, data: out, levels: mips, fmt: 'DXT3' };
-  }
+  if (fccS === 'DXT3') return { w, h, data: decDXT3(w, h, raw), levels: mips, fmt: 'DXT3' };
   if (fcc !== 0) throw new Error('FourCC ' + fccS + ' no soportado');
   if (bits !== 32) throw new Error('DDS de ' + bits + 'bpp no soportado (solo 32-bit, DXT1/3/5)');
   const out = new Uint8Array(w * h * 4);
@@ -146,4 +148,4 @@ function parseDDS(buf) {
   return { w, h, data: out, levels: mips, fmt: 'RGBA8' };
 }
 
-Object.assign(window.BST, { buildDDS, parseDDS, decDXT1, decDXT5 });
+Object.assign(window.BST, { buildDDS, parseDDS, decDXT1, decDXT3, decDXT5 });

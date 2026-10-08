@@ -4,7 +4,7 @@
   const { $, ilog, toast, setProgress, downloadBlob, downloadAsZip } = window.BST;
 
   let imgQ = [], _iq = 0;
-  const imgKind = (f) => /\.ktx$/i.test(f.name) ? 'ktx' : /\.dds$/i.test(f.name) ? 'dds' : 'img';
+  const imgKind = (f) => /\.ktx2$/i.test(f.name) ? 'ktx2' : /\.ktx$/i.test(f.name) ? 'ktx' : /\.dds$/i.test(f.name) ? 'dds' : 'img';
 
   const drop = $('imgDrop');
   const openPicker = (e) => { if (e.target.closest('.q')) return; $('imgFile').click(); };
@@ -17,6 +17,8 @@
   $('imgClear').onclick = () => {
     imgQ = []; renderImg();
     $('imgPreview').src = '';
+    delete $('imgPreview').dataset.full;
+    $('imgDims').textContent = 'Sin vista previa.';
     setProgress('imgProgress', 0, 0);
     refreshZipBtn();
     ilog('Cola vaciada.');
@@ -46,7 +48,7 @@
       d.className = 'q';
       d.innerHTML = q.kind === 'img'
         ? '<img><span class="nm"></span><span class="st"></span>'
-        : '<div class="badge-custom"><i class="fas fa-file-image"></i></div><span class="nm"></span><span class="st"></span>';
+        : `<div class="badge-custom"><i class="fas ${q.kind === 'ktx2' ? 'fa-cube' : 'fa-file-image'}"></i></div><span class="nm"></span><span class="st"></span>`;
       if (q.kind === 'img') d.querySelector('img').src = q.url;
       d.querySelector('.nm').textContent = q.file.name;
       d.querySelector('.st').textContent = q.status;
@@ -68,15 +70,17 @@
   }
 
   async function srcToRGBA(q) {
-    const { loadImg, rgbaOf, parseKTX, parseDDS } = window.BST;
+    const { loadImg, rgbaOf, parseKTX, parseKTX2, parseDDS } = window.BST;
     if (q.kind === 'img') {
       const im = await loadImg(q.url);
       const r = rgbaOf(im);
-      return { ...r, img: im };
+      const ext = (q.file.name.split('.').pop() || '').toUpperCase();
+      return { ...r, img: im, fmt: ext || 'IMG' };
     }
     const buf = await q.file.arrayBuffer();
-    if (q.kind === 'ktx') { const k = parseKTX(buf); return { w: k.w, h: k.h, data: k.data }; }
-    const d = parseDDS(buf); return { w: d.w, h: d.h, data: d.data };
+    if (q.kind === 'ktx') { const k = parseKTX(buf); return { w: k.w, h: k.h, data: k.data, fmt: 'KTX1' }; }
+    if (q.kind === 'ktx2') { const k = parseKTX2(buf); return { w: k.w, h: k.h, data: k.data, fmt: k.fmt }; }
+    const d = parseDDS(buf); return { w: d.w, h: d.h, data: d.data, fmt: d.fmt };
   }
 
   async function prevImg(id) {
@@ -84,11 +88,24 @@
     if (!q) return;
     try {
       const s = await srcToRGBA(q);
-      $('imgPreview').src = window.BST.canvasOf(s.data, s.w, s.h).toDataURL();
-      q.status = `${s.w}×${s.h}`;
-    } catch (e) { q.status = 'error'; ilog('Vista previa ' + q.file.name + ': ' + e.message); }
+      const url = window.BST.canvasOf(s.data, s.w, s.h).toDataURL();
+      const pv = $('imgPreview');
+      pv.src = url;
+      pv.dataset.full = url;
+      pv.dataset.name = q.file.name;
+      $('imgDims').textContent = `${q.file.name} — ${s.w}×${s.h} · ${s.fmt || ''} · vista a escala real (clic para ampliar)`;
+      q.status = `${s.w}×${s.h}${s.fmt ? ' · ' + s.fmt : ''}`;
+    } catch (e) {
+      q.status = 'error';
+      $('imgDims').textContent = 'Sin vista previa: ' + e.message;
+      ilog('Vista previa ' + q.file.name + ': ' + e.message);
+    }
     renderImg();
   }
+  $('imgPreview').onclick = () => {
+    const pv = $('imgPreview');
+    if (pv.dataset.full) window.open(pv.dataset.full, '_blank');
+  };
 
   function refreshZipBtn() {
     const done = imgQ.filter((q) => q.outBlob);
@@ -113,7 +130,7 @@
   };
 
   $('imgGo').onclick = async () => {
-    const { hasAlphaArr, flipArr, compToBg, padRows, buildKTX, buildDDS, mipChain, canvasOf } = window.BST;
+    const { hasAlphaArr, flipArr, compToBg, padRows, buildKTX, buildKTX2, buildDDS, mipChain, canvasOf } = window.BST;
     $('imgGo').disabled = true;
     $('imgGo').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Convirtiendo…';
     const target = $('imgTarget').value, mode = $('imgMode').value,
@@ -145,6 +162,10 @@
           });
           q.outBlob = new Blob([buildKTX(lv, s.w, s.h, isRgba)], { type: 'image/ktx' });
           q.outName = `${base}_${isRgba ? 'RGBA8' : 'RGB8'}${withMip ? '_mip' : ''}.ktx`;
+        } else if (target === 'ktx2') {
+          const chain = mipChain(data, s.w, s.h, withMip);
+          q.outBlob = new Blob([buildKTX2(chain, s.w, s.h, isRgba)], { type: 'image/ktx2' });
+          q.outName = `${base}_${isRgba ? 'RGBA8' : 'RGB8'}${withMip ? '_mip' : ''}.ktx2`;
         } else if (target === 'dds') {
           const chain = mipChain(data, s.w, s.h, withMip);
           q.outBlob = new Blob([buildDDS(chain, s.w, s.h)], { type: 'image/vnd-ms.dds' });

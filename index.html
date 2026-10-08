@@ -45,7 +45,7 @@
     <h1 class="display-5 mb-3">Herramientas para <span>BombSquad</span></h1>
     <p class="mx-auto">Convierte texturas <b class="hl">JPG / PNG ⇄ KTX / DDS</b> y audios <b class="hl">MP3 ⇄ OGG / WAV</b>. Funciona 100% en tu navegador, sin subir archivos. Al convertir varios, todo se descarga en <b class="hl">un solo ZIP</b>.</p>
     <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-      <span class="badge text-bg-dark border"><i class="fas fa-image me-1 text-primary"></i>KTX · DDS · PNG · JPG</span>
+      <span class="badge text-bg-dark border"><i class="fas fa-image me-1 text-primary"></i>KTX · KTX2 · DDS · PNG · JPG</span>
       <span class="badge text-bg-dark border"><i class="fas fa-music me-1 text-warning"></i>OGG · WAV · MP3</span>
       <span class="badge text-bg-dark border"><i class="fas fa-file-archive me-1 text-success"></i>Descarga en ZIP</span>
     </div>
@@ -71,10 +71,10 @@
             </div>
           </div>
           <div class="card-body">
-            <p class="hint mb-3">BombSquad usa DDS y KTX. Sube tus JPG/PNG con o sin transparencia y exporta a KTX (RGBA8/RGB8) o DDS (RGBA8 32-bit) con o sin mipmaps.</p>
+            <p class="hint mb-3">BombSquad usa DDS y KTX. Sube tus JPG/PNG con o sin transparencia y exporta a KTX 1.0, KTX 2.0 (Khronos) o DDS (RGBA8 32-bit) con o sin mipmaps.</p>
             <ol class="steps">
               <li>Ve a <b>Imágenes</b> y arrastra tus PNG/JPG.</li>
-              <li>Elige salida: KTX, DDS, PNG o JPG.</li>
+              <li>Elige salida: KTX, KTX2, DDS, PNG o JPG.</li>
               <li>Convierte: 1 archivo se descarga directo, varios llegan en <b>un ZIP</b>.</li>
             </ol>
             <button class="btn btn-primary w-100 mt-3" onclick="document.getElementById('nImg').click()"><i class="fas fa-arrow-right me-2"></i>Ir al convertidor de imágenes</button>
@@ -111,7 +111,7 @@
           <div class="col-md-6">
             <div class="info-box h-100">
               <b><i class="fas fa-user me-2 text-primary"></i>Personaje / cartel</b><br>
-              <span class="hint">PNG con alfa → KTX RGBA8 o DDS RGBA8 con mipmaps. Opaco → RGB8 / JPG para pesar menos.</span>
+              <span class="hint">PNG con alfa → KTX/KTX2 RGBA8 o DDS RGBA8 con mipmaps. Opaco → RGB8 / JPG para pesar menos.</span>
             </div>
           </div>
           <div class="col-md-6">
@@ -129,25 +129,26 @@
   <section id="sImg">
     <div class="card-custom">
       <div class="card-header d-flex flex-wrap align-items-center gap-2">
-        <h2 class="me-auto"><i class="fas fa-images me-2 text-success"></i>Convertidor de imágenes <span class="tag ok ms-2">JPG PNG ⇄ KTX DDS</span></h2>
+        <h2 class="me-auto"><i class="fas fa-images me-2 text-success"></i>Convertidor de imágenes <span class="tag ok ms-2">JPG PNG ⇄ KTX KTX2 DDS</span></h2>
         <span class="badge text-bg-primary"><i class="fas fa-file-archive me-1"></i>Salida en ZIP</span>
       </div>
       <div class="card-body">
         <div class="alert alert-dark border-secondary d-flex gap-2 align-items-start" role="note">
           <i class="fas fa-info-circle mt-1 text-primary"></i>
-          <span class="hint mb-0">Entrada: .jpg .png .webp .bmp .ktx .dds · Salida: .ktx .dds .png .jpg · KTX/DDS sin compresión de bloques (RGBA8/RGB8). Para ETC2/ASTC/DXT comprimido usa Mali Texture Compression Tool o Compressonator. En reversa se decodifican KTX sin comprimir y DDS RGBA8 + DXT1/DXT3/DXT5.</span>
+          <span class="hint mb-0">Entrada: .jpg .png .webp .bmp .ktx .ktx2 .dds · Salida: .ktx .ktx2 .dds .png .jpg · KTX1/KTX2/DDS sin compresión de bloques (RGBA8/RGB8 sRGB, layout compatible con <b>toktx</b>). Para ETC2/ASTC/Basis comprimido usa KTX-Software CLI. En reversa se decodifican KTX1 sin comprimir, KTX2 RGB(A)8, BC1/BC2/BC3 (software), BC7/ETC2/ASTC (vía GPU del navegador) y DDS RGBA8 + DXT1/DXT3/DXT5.</span>
         </div>
         <div class="drop" id="imgDrop" role="button" tabindex="0" aria-label="Añadir imágenes">
           <span class="drop-icon"><i class="fas fa-cloud-arrow-up"></i></span>
-          <b>Arrastra imágenes, KTX o DDS aquí</b><br>
+          <b>Arrastra imágenes, KTX, KTX2 o DDS aquí</b><br>
           <span class="hint">o clic para elegir (múltiple) · <i class="fas fa-times"></i> elimina de la cola</span>
-          <input type="file" id="imgFile" accept=".jpg,.jpeg,.png,.webp,.bmp,.ktx,.dds" multiple hidden>
+          <input type="file" id="imgFile" accept=".jpg,.jpeg,.png,.webp,.bmp,.ktx,.ktx2,.dds" multiple hidden>
         </div>
         <div class="row g-3 mt-2">
           <div class="col-md-4">
             <label class="form-label" for="imgTarget"><i class="fas fa-file-export me-1"></i>Formato de salida</label>
             <select class="form-select" id="imgTarget">
-              <option value="ktx" selected>KTX (KTX 1.0)</option>
+              <option value="ktx" selected>KTX (KTX 1.0, BombSquad)</option>
+              <option value="ktx2">KTX2 (KTX 2.0 Khronos)</option>
               <option value="dds">DDS (RGBA 32-bit)</option>
               <option value="png">PNG (transparencia)</option>
               <option value="jpg">JPG (opaco)</option>
@@ -172,7 +173,7 @@
         </div>
         <div class="row g-3 mt-1">
           <div class="col-md-4">
-            <label class="form-label" for="imgMip"><i class="fas fa-layer-group me-1"></i>Mipmaps (solo KTX/DDS)</label>
+            <label class="form-label" for="imgMip"><i class="fas fa-layer-group me-1"></i>Mipmaps (KTX / KTX2 / DDS)</label>
             <select class="form-select" id="imgMip">
               <option value="1" selected>Sí, hasta 1×1</option>
               <option value="0">No, nivel 0</option>
@@ -183,7 +184,7 @@
             <select class="form-select" disabled><option>Solo RGBA8 32-bit sin comprimir</option></select>
           </div>
           <div class="col-md-4">
-            <label class="form-label">KTX</label>
+            <label class="form-label">KTX1 / KTX2</label>
             <select class="form-select" disabled><option>RGBA8 / RGB8 sin comprimir</option></select>
           </div>
         </div>
@@ -218,8 +219,11 @@
         <h3><i class="fas fa-eye me-2"></i>Vista previa</h3>
       </div>
       <div class="card-body">
-        <img id="imgPreview" alt="Vista previa" class="mb-3">
-        <div class="log" id="imgLog">Listo.
+        <div class="preview-wrap">
+          <img id="imgPreview" alt="Vista previa (clic para ver a tamaño real)" title="Clic para abrir a tamaño real 1:1">
+        </div>
+        <div id="imgDims" class="hint text-center mt-2">Sin vista previa.</div>
+        <div class="log mt-3" id="imgLog">Listo.
 </div>
       </div>
     </div>
@@ -307,6 +311,8 @@
       </div>
       <div class="card-body">
         <div class="list-group">
+          <a href="https://github.com/KhronosGroup/KTX-Software/releases" target="_blank" rel="noopener" class="list-group-item list-group-item-dark"><i class="fas fa-cube me-2"></i>KTX-Software (releases) — herramientas CLI <b>ktx create / transcode / extract</b> para KTX2 avanzado (Basis, ASTC, ETC2)<i class="fas fa-arrow-up-right-from-square ms-2 small"></i></a>
+          <a href="https://registry.khronos.org/KTX/specs/2.0/ktxspec.v2.html" target="_blank" rel="noopener" class="list-group-item list-group-item-dark"><i class="fas fa-book me-2"></i>Especificación KTX 2.0 (Khronos Registry)<i class="fas fa-arrow-up-right-from-square ms-2 small"></i></a>
           <a href="https://github.com/ARM-software/astc-encoder" target="_blank" rel="noopener" class="list-group-item list-group-item-dark"><i class="fab fa-github me-2"></i>astc-encoder — sucesor open-source de Mali (ASTC/ETC)<i class="fas fa-arrow-up-right-from-square ms-2 small"></i></a>
           <a href="https://archive.org/download/mali-texture-compression-tool" target="_blank" rel="noopener" class="list-group-item list-group-item-dark"><i class="fas fa-box-archive me-2"></i>Mali Texture Compression Tool v4.3.0 (archivo)<i class="fas fa-arrow-up-right-from-square ms-2 small"></i></a>
           <a href="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js" target="_blank" rel="noopener" class="list-group-item list-group-item-dark"><i class="fas fa-code me-2"></i>lamejs 1.2.1 — codificador MP3 usado por esta página<i class="fas fa-arrow-up-right-from-square ms-2 small"></i></a>
@@ -320,9 +326,12 @@
       </div>
       <div class="card-body">
         <ul class="steps">
-          <li>KTX generado es <b>sin compresión</b> (RGBA8/RGB8). Válido y compatible con Mali Tool, pero pesa más que ETC2/ASTC.</li>
+          <li>KTX 1.0 generado es <b>sin compresión</b> (RGBA8/RGB8). Válido y compatible con Mali Tool, pero pesa más que ETC2/ASTC.</li>
+          <li>KTX 2.0 generado es <b>sin compresión</b> (R8G8B8A8_SRGB / R8G8B8_SRGB, DFD sRGB, layout compatible con <b>toktx</b>). Para Basis/ASTC/ETC2 usa <b>KTX-Software CLI</b> (<a href="https://github.com/KhronosGroup/KTX-Software/releases" target="_blank" rel="noopener">releases</a>): p. ej. <b>ktx encode</b> sobre el .ktx2 de esta página.</li>
+          <li>En reversa se leen KTX2 RGB(A)8 sin comprimir, BC1/BC2/BC3 (100% software) y BC7/ETC2/ASTC LDR (decodificados con tu GPU vía WebGL2; en sRGB el redondeo puede variar ±1 LSB). Los KTX2 universales (BasisLZ/UASTC) y supercomprimidos (Zstd/ZLIB) se derivan a <b>ktx transcode / ktx extract</b>.</li>
           <li>DDS generado es <b>RGBA 32-bit sin comprimir</b>. En reversa se leen RGBA8 + DXT1/3/5.</li>
-          <li>KTX comprimido (glType=0, ETC2/ASTC) no se decodifica en web; usa Mali Tool / astcenc.</li>
+          <li>KTX 1.0 comprimido (glType=0, ETC2/ASTC) no se decodifica en web; usa Mali Tool / astcenc.</li>
+          <li>BombSquad usa KTX 1.0/DDS: verifica que tu mod/motor acepte <b>KTX2</b> antes de usarlo en el juego.</li>
           <li>OGG se genera como <b>Opus vía MediaRecorder</b>. Si tu navegador solo da WebM, se guarda .webm y se avisa.</li>
           <li>Los lotes se empaquetan con <b>JSZip (STORE, sin recompresión)</b> para no perder calidad.</li>
         </ul>
@@ -333,7 +342,7 @@
 
   <footer class="text-center mt-4 py-4">
     <div><i class="fas fa-bomb me-2 text-success"></i><b class="hl">BombSquad Tools</b> · todo se procesa en tu navegador</div>
-    <div class="hint mt-1">Texturas KTX/DDS · Audio OGG/WAV/MP3 · Paquetes ZIP · Bootstrap 5 + FontAwesome 6</div>
+    <div class="hint mt-1">Texturas KTX/KTX2/DDS · Audio OGG/WAV/MP3 · Paquetes ZIP · Bootstrap 5 + FontAwesome 6</div>
   </footer>
 </div>
 
@@ -347,6 +356,8 @@
 <script src="js/theme.js"></script>
 <script src="js/nav.js"></script>
 <script src="js/ktx.js"></script>
+<script src="js/ktx2.js"></script>
+<script src="js/ktx2gpu.js"></script>
 <script src="js/dds.js"></script>
 <script src="js/images.js"></script>
 <script src="js/audio.js"></script>
